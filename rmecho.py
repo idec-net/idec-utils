@@ -6,6 +6,7 @@ if len(sys.argv) == 2:
     try:
         echo = open("echo/" + sys.argv[1], "r")
     except:
+        echo = False
         print("Эхоконференция не найдена.")
     if echo:
         msgids = echo.read().split("\n")[:-1]
