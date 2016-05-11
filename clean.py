@@ -31,4 +31,5 @@ for msgid in echoarea:
             print(msgid + ": deleted.")
             os.remove("msg/" + msgid)
 
+clean_echoarea.append("")
 open("echo/" + sys.argv[1], "w").write("\n".join(clean_echoarea))
