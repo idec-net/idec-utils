@@ -3,30 +3,11 @@
 import sys, calendar, datetime
 
 echoareas = []
-config = ""
-start_date = ""
-end_date = ""
-title = "Echoareas"
 
-if "-f" in sys.argv and len(sys.argv) == 7:
-    config = sys.argv[sys.argv.index("-f") + 1]
-else:
-    print("Usage: idec-stat -f config_file -s YYYY.MM.DD -e YYYY.MM.DD.\n")
-    quit()
-
-if "-s" in sys.argv and len(sys.argv) == 7:
-    date = sys.argv[sys.argv.index("-s") + 1].split(".")
-    start_date = calendar.timegm(datetime.date(int(date[0]), int(date[1]), int(date[2])).timetuple())
-else:
-    print("Usage: idec-stat -f config_file -s YYYY.MM.DD -e YYYY.MM.DD.\n")
-    quit()
-
-if "-e" in sys.argv and len(sys.argv) == 7:
-    date = sys.argv[sys.argv.index("-e") + 1].split(".")
-    end_date = calendar.timegm(datetime.date(int(date[0]), int(date[1]), int(date[2])).timetuple())
-else:
-    print("Usage: idec-stat -f config_file -s YYYY.MM.DD -e YYYY.MM.DD.\n")
-    quit()
+def usage_quit():
+    print("Usage: stat.py -c config_file -t [stats_type] -s YYYY.MM.DD -e YYYY.MM.DD.\n\
+stats_type must be \"echoareas\" or \"points\"\n")
+    sys.exit(1)
 
 def load_config():
     global echoareas, title
@@ -38,25 +19,50 @@ def load_config():
         if param[0] == "title":
             title = " ".join(param[1:])
 
-def calculate_msgs(echoarea):
-    ret = []
-    msgids = open("echo/" + echoarea, "r").read().split("\n")
-    for msgid in msgids:
-        if len(msgid) == 20:
-            msg = open("msg/" + msgid, "r").read().split("\n")
-            if int(msg[2]) >= start_date and int(msg[2]) < end_date:
-                ret.append(msgid)
-    return ret
+def parse_date(date):
+    date = date.split(".")
+    return calendar.timegm(datetime.date(int(date[0]), int(date[1]), int(date[2])).timetuple())
 
-def calculate_echoareas():
+def calculate_stat():
+    stat = {}
     ret = []
     for echoarea in echoareas:
-        ret.append([echoarea, len(calculate_msgs(echoarea))])
-    ret = sorted(ret, key=lambda ret: ret[1], reverse = True)
-    return ret
+        msgids = open("echo/" + echoarea, "r").read().split("\n")
+        for msgid in msgids:
+            if len(msgid) == 20:
+                msg = open("msg/" + msgid, "r").read().split("\n")
+                if int(msg[2]) >= start_date and int(msg[2]) < end_date:
+                    if stat_type == "points":
+                        if not msg[3] in stat:
+                            stat[msg[3]] = 1
+                        else:
+                            stat[msg[3]] += 1
+                    else:
+                        if not echoarea in stat:
+                            stat[echoarea] = 1
+                        else:
+                            stat[echoarea] += 1
+    for item in stat:
+        ret.append([item, stat[item]])
+    return sorted(ret, key=lambda ret: ret[1], reverse = True)
+
+args=sys.argv[1:]
+
+start_on = "-s" in args
+end_on = "-e" in args
+type_on = "-t" in args
+config_on = "-c" in args
+
+if len(args) != 8 or not start_on or not end_on or not type_on or not config_on:
+    usage_quit()
+
+start_date = parse_date(args[args.index("-s") + 1])
+end_date = parse_date(args[args.index("-e") + 1])
+stat_type = args[args.index("-t") + 1]
+config = args[args.index("-c") + 1]
 
 load_config()
-stat = calculate_echoareas()
+stat = calculate_stat()
 value_of_division = round(stat[0][1] / 54 + 0.49)
 total = 0
 print("%-25s ▒ ≈ %s messages" % (title, value_of_division))
