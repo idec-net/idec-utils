@@ -37,11 +37,16 @@ def calculate_stat():
                             stat[msg[3]] = 1
                         else:
                             stat[msg[3]] += 1
-                    else:
+                    elif stat_type == "echoareas":
                         if not echoarea in stat:
                             stat[echoarea] = 1
                         else:
                             stat[echoarea] += 1
+                    elif stat_type == "subjects":
+                       if not msg[6] in stat:
+                           stat[msg[6]] = 1
+                       else:
+                           stat[msg[6]] += 1
     for item in stat:
         ret.append([item, stat[item]])
     return sorted(ret, key=lambda ret: ret[1], reverse = True)
