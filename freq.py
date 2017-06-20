@@ -81,6 +81,8 @@ else:
     file_size=0
     block_size=8192
 
+    filename = filename.split("/")[-1]
+
     f = open(filename, "wb")
     while True:
         buffer = out.read(block_size)
